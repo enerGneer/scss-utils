@@ -1,0 +1,32 @@
+// --------------------------------------------------------------
+//  Clamp Size Calculator
+// --------------------------------------------------------------
+// 使用方法：clamp() の代わりに clampCalc() を入力します。
+//        （）内には2つの値を順不同で入力します。(px, rem 両方対応)
+//        例: font-size: clampCalc(30px, 50px); 
+//            → font-size: clamp(30px, 17.2131px + 3.27869vw, 50px);
+//               ※font-size: clampCalc(50px, 30px); と入力しても同じ結果が得られます。
+// 
+//        例: font-size: clampCalc(3rem, 5rem);
+//            → font-size: clamp(3rem, 17.2131px + 3.27869vw, 5rem);
+@function clampCalc($val1, $val2, $min-vp: 390, $max-vp: 1000, $root-font-size: 10) {
+    $unit: unit($val1);
+    $min-val: min($val1, $val2);
+    $max-val: max($val1, $val2);
+    $min-val-num: $min-val / ($min-val * 0 + 1);
+    $max-val-num: $max-val / ($max-val * 0 + 1);
+    $vp-diff: $max-vp - $min-vp;
+
+    $calc-min: if($unit == 'rem', $min-val-num * $root-font-size, $min-val-num);
+    $calc-max: if($unit == 'rem', $max-val-num * $root-font-size, $max-val-num);
+    $calc-unit: if($unit == 'rem', 'px', $unit);
+    
+    $slope: ($calc-max - $calc-min) / $vp-diff;
+    $intersection: $calc-min - ($slope * $min-vp);
+    
+    @return clamp(
+        #{$min-val-num}#{$unit},
+        #{$intersection}#{$calc-unit} + #{$slope * 100}vw,
+        #{$max-val-num}#{$unit}
+    );
+}
