@@ -1,0 +1,40 @@
+// --------------------------------------------------------------
+//  CSS WEBP Background-image image-set Generator
+// --------------------------------------------------------------
+// 使用方法 : @include bgWebp('パス')
+//        上記のように入力すると、自動的にwebpパスを生成し、background-imageとして指定します。
+//
+// 例.入力 : @include bgWebp('../assets/img/image.jpg')
+// 結果   : background-image: url('../assets/img/image.jpg');            ← image-set 未対応ブラウザのフォールバック用
+//          background-image: image-set(
+//            url('../assets/img/image.webp') type('image/webp') 1x,;    ← パスの拡張子のみwebpに変更
+//            url('../assets/img/image.jpg') type('image/jpeg') 1x,;     ← パスのタイプから自動的にjpegと抽出したもの
+
+@mixin bgWebp($image-path) {
+    $last-dot-position: find-last-dot($image-path);
+    $path-without-ext: str-slice($image-path, 1, $last-dot-position - 1);
+    $extension: str-slice($image-path, $last-dot-position + 1);
+    $mime-type: get-mime-type($extension);
+    $webp-path: $path-without-ext + '.webp';
+    
+    // フォールバック背景
+    background-image: url($image-path);
+    // image-setでWebPを優先し、元の画像をフォールバック
+    background-image: image-set(
+        url($webp-path) type('image/webp') 1x,
+        url($image-path) type($mime-type) 1x
+    );
+}
+@function find-last-dot($path) {
+    $dot-position: 0; $temp-path: $path;
+    @while str-index($temp-path, '.') {
+        $current-dot: str-index($temp-path, '.');
+        $dot-position: $dot-position + $current-dot;
+        $temp-path: str-slice($temp-path, $current-dot + 1);
+    }
+    @return $dot-position;
+}
+@function get-mime-type($extension) {
+    $mime-types: ( 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'webp': 'image/webp', 'svg': 'image/svg+xml' );
+    @return map-get($mime-types, to-lower-case($extension));
+}
